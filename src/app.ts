@@ -3,8 +3,8 @@ import 'express-async-errors';
 import helmet from 'helmet';
 import cors from 'cors';
 
-import ExceptionHandler from './events/AppError.js';
-import router from './routes/index.js';
+import ExceptionHandler from './events/AppError';
+import router from './routes/index';
 
 const app = express();
 app.use(cors());

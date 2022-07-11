@@ -1,11 +1,13 @@
 import axios, { AxiosRequestHeaders } from 'axios';
 import SqlString from 'sqlstring';
-import './../config/setup.js';
+import './../config/setup';
 
-import client from '../config/database.js';
-import * as service from './../services/battle.service.js';
-import AppLog from '../events/AppLog.js';
-import { AppError } from './../events/AppError.js';
+import client from '../config/database';
+import * as service from './../services/battle.service';
+import AppLog from '../events/AppLog';
+
+import { AppError } from './../events/AppError';
+import { Fighter } from '../lib/battle';
 
 const HEADERS: AxiosRequestHeaders = {
   Accept: 'application/vnd.github+json',
@@ -13,7 +15,7 @@ const HEADERS: AxiosRequestHeaders = {
 
 async function fetchUserData(
   username: string,
-  queries: { [query: string]: string } = { type: 'all' },
+  queries: { [query: string]: string },
 ) {
   const queryKeys = Object.keys(queries);
   const queryValues = Object.values(queries);
@@ -61,7 +63,7 @@ async function checkIfFighterExists(username: string) {
   const query = SqlString.format(`SELECT * FROM fighters WHERE username = ?`, [
     username,
   ]);
-  const result = await client.query(query);
+  const result = await client.query<Fighter>(query);
 
   const output = !!result.rowCount;
   AppLog.DATABASE(`Fighter instance checked`);
@@ -101,7 +103,7 @@ async function rankUsers() {
   const query = SqlString.format(
     `SELECT username, wins, losses, draws FROM fighters ORDER BY wins DESC, draws DESC`,
   );
-  const result = await client.query(query);
+  const result = await client.query<Fighter>(query);
 
   const output = result.rows;
   AppLog.DATABASE(`Users ranked`);

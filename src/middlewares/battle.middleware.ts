@@ -1,11 +1,13 @@
 import { Request, Response, NextFunction } from 'express';
 
-import * as repository from './../repositories/battle.repository.js';
-import AppError from '../config/error.js';
-import AppLog from '../events/AppLog.js';
+import * as repository from './../repositories/battle.repository';
+import AppError from '../config/error';
+import AppLog from '../events/AppLog';
+
+import { ReqBody } from '../lib/battle';
 
 function processData(req: Request, res: Response, next: NextFunction) {
-  const { firstUser, secondUser } = req.body;
+  const { firstUser, secondUser }: ReqBody = req.body;
 
   res.locals.data = { firstUser, secondUser };
   AppLog.MIDDLEWARE(`Data processed`);
@@ -13,7 +15,7 @@ function processData(req: Request, res: Response, next: NextFunction) {
 }
 
 function usersExists(_req: Request, res: Response, next: NextFunction) {
-  const { firstUser, secondUser } = res.locals.data;
+  const { firstUser, secondUser }: ReqBody = res.locals.data;
 
   const firstData = repository.fetchUser(firstUser);
   if (!firstData) {

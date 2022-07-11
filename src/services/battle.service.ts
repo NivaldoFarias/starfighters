@@ -1,7 +1,9 @@
-import './../config/setup.js';
+import './../config/setup';
 
-import * as repository from './../repositories/battle.repository.js';
-import AppLog from '../events/AppLog.js';
+import * as repository from './../repositories/battle.repository';
+import AppLog from '../events/AppLog';
+import { AppError } from '../events/AppError';
+import { FighterBattleData } from '../lib/battle';
 
 function countStargazers(repositories: any[]) {
   const output = repositories.reduce(
@@ -31,20 +33,17 @@ function processUrl(user: string, queries?: any[], queriesType?: any[]) {
   return output;
 }
 
-function battle(
-  firstUser: { username: string; count: number },
-  secondUser: { username: string; count: number },
-) {
+function battle(firstUser: FighterBattleData, secondUser: FighterBattleData) {
   const output = {
     winner:
-      firstUser.count > secondUser.count
+      firstUser.stargazersCount > secondUser.stargazersCount
         ? firstUser.username
         : secondUser.username,
     loser:
-      firstUser.count > secondUser.count
+      firstUser.stargazersCount > secondUser.stargazersCount
         ? secondUser.username
         : firstUser.username,
-    draw: firstUser.count === secondUser.count,
+    draw: firstUser.stargazersCount === secondUser.stargazersCount,
   };
 
   AppLog.MIDDLEWARE(`Battle results processed`);
@@ -56,13 +55,30 @@ async function resolveBattle(
   secondUsername: string,
   results: any,
 ) {
-  (await repository.checkIfFighterExists(firstUsername))
-    ? await repository.updateFighter(firstUsername, results)
-    : await repository.createFighter(firstUsername, results);
+  try {
+    const [firstUserBool, secondUserBool] = (await Promise.all([
+      repository.checkIfFighterExists(firstUsername),
+      repository.checkIfFighterExists(secondUsername),
+    ])) as [boolean, boolean];
 
-  (await repository.checkIfFighterExists(secondUsername))
-    ? await repository.updateFighter(secondUsername, results)
-    : await repository.createFighter(secondUsername, results);
+    await Promise.all([
+      firstUserBool
+        ? repository.updateFighter(firstUsername, results)
+        : repository.createFighter(firstUsername, results),
+      secondUserBool
+        ? repository.updateFighter(secondUsername, results)
+        : repository.createFighter(secondUsername, results),
+    ]);
+  } catch (error) {
+    if (error instanceof AppError) {
+      throw new AppError(
+        error.response.statusText,
+        error.response.status,
+        error.response.statusText,
+        error.response.data.message,
+      );
+    } else console.log(error);
+  }
 
   return AppLog.MIDDLEWARE(`Battle resolved`);
 }

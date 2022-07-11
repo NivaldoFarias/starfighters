@@ -2,7 +2,7 @@
   "compilerOptions": {
     /* Basic Options */
     "target": "ESNEXT",
-    "module": "esnext",
+    "module": "commonjs",
     "outDir": "dist",
     "rootDir": "./src",
     "allowUmdGlobalAccess": true,

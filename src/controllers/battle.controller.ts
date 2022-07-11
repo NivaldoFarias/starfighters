@@ -1,20 +1,24 @@
 import { Request, Response } from 'express';
 
-import * as repository from './../repositories/battle.repository.js';
-import * as service from './../services/battle.service.js';
-import AppLog from '../events/AppLog.js';
+import * as repository from './../repositories/battle.repository';
+import * as service from './../services/battle.service';
+import AppLog from '../events/AppLog';
+
+import { Fighter, ReqBody } from '../lib/battle';
 
 async function newBattle(_req: Request, res: Response) {
-  const { firstUser, secondUser } = res.locals.data;
+  const { firstUser, secondUser }: ReqBody = res.locals.data;
 
-  const firstUserCount = await repository.fetchUserData(firstUser, {
-    type: 'all',
-    per_page: '100',
-  });
-  const secondUserCount = await repository.fetchUserData(secondUser, {
-    type: 'all',
-    per_page: '100',
-  });
+  const [firstUserCount, secondUserCount] = await Promise.all([
+    repository.fetchUserData(firstUser, {
+      type: 'all',
+      per_page: '100',
+    }),
+    repository.fetchUserData(secondUser, {
+      type: 'all',
+      per_page: '100',
+    }),
+  ]);
 
   const firstUserObj = { username: firstUser, count: firstUserCount };
   const secondUserObj = { username: secondUser, count: secondUserCount };
